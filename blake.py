@@ -91,7 +91,7 @@ print("corpus")
 # Build LDA (topic) model
 # Build the LDA model
 lda_model = gensim.models.LdaModel(corpus=corpus,
-                                   num_topics=10,
+                                   num_topics=5,
                                    id2word=dictionary)
 lda_model.save(fname="blake.lda")
 

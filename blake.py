@@ -49,40 +49,38 @@ def chunk_poems(docu):
 
     return list_of_poems
 
-
-all_songs = chunk_poems(blake_poems)
-
-
 # Segment by song collection
 
 
-def chunk_song_collection(per_song):
-    list_of_song_collections = []
+def chunk_song_collection(text):
     innocence = []
     experience = []
-    start = 1
-    end = per_song.index(['APPENDIX'])
+    list_of_song_collections = []
+    splitter = text.index(['SONGS', 'OF', 'EXPERIENCE'])
+    start = 2
+    end = text.index(['APPENDIX'])
 
-    splitter = per_song.index(['SONGS', 'OF', 'EXPERIENCE'])
-    innocence.extend(per_song[start:splitter])
-    experience.extend(per_song[splitter:end])
+    innocence.append(text[start:splitter])
+    print(innocence)
+    experience.append(text[splitter:end])
+    print(experience)
 
     list_of_song_collections.append(innocence)
     list_of_song_collections.append(experience)
 
+    return innocence, experience
     return list_of_song_collections
 
 
-all_songs_split_by_collection = chunk_song_collection(all_songs)
+all_poems = chunk_poems(blake_poems)
+
 # Tokenize and clean text, make it into data for Gensim
 # TODO lemmatize
 
-
-def clean_text(collection):
+def clean_text(poem):
     tokenized_text = []
-    for text in collection:
-        for word in text:
-            tokenized_text.extend(word_tokenize(word.lower()))
+    for word in poem:
+        tokenized_text.extend(word_tokenize(word.lower()))
 
     return [
         elem for elem in tokenized_text
@@ -93,18 +91,17 @@ def clean_text(collection):
         )
     ]
 
-# Tokenize data by poem
-#tokenized_data = []
-#for poem in all_songs:
- #   tokenized_data.append(clean_text(poem))
+
+# Tokenize data
+def tokenize_data(text):
+    tokenized_data = []
+    for poem in text:
+        tokenized_data.append(clean_text(poem))
+    return tokenized_data
 
 
-# Tokenize data by collection
-tokenized_data = []
-for collection in all_songs_split_by_collection:
-    tokenized_data.append(clean_text(collection))
+tokenized_data = tokenize_data(all_poems)
 
-print("tokenized")
 
 # Build Dictionary (Construct word<->id mappings)
 dictionary = corpora.Dictionary(tokenized_data)  # Initialize a Dictionary
@@ -112,30 +109,29 @@ dictionary = corpora.Dictionary(tokenized_data)  # Initialize a Dictionary
 # Texts to Bag Of Words
 corpus = [dictionary.doc2bow(text) for text in tokenized_data]
 
-print("corpus")
 
 # Note: format of piece [(word_id, count), ...]
 # e.g. corpus[20]
 # [(12, 3), (14, 1), (21, 1), (25, 5), (30, 2), (31, 5), (33, 1), (42, 1), (43, 2),  ...
 
 # Build LDA (topic) model
-# Build the LDA model
 lda_model = gensim.models.LdaModel(corpus=corpus,
-                                   num_topics=3,
+                                   num_topics=10,
                                    id2word=dictionary)
 lda_model.save(fname="blake.lda")
 
-print("lda")
-
 
 # Visualize topics
-vis = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
-pyLDAvis.show(vis)
+# vis = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
+# pyLDAvis.show(vis)
 
 
 # Determine which topics belong to which documents
-# Option 1: create 2 models, one per collection
-# Option 2: keep 1 model but find out how to proceed
+# Keep 1 model, find out relative poems to documents, analyze and compare
+# Use method lda_model[corpus[n]
 
+def explore_song_collections(text):
+    innocence, experience = chunk_song_collection(text)
+    pass
 
-# Compare topics
+explore_song_collections(all_poems)

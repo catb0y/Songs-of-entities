@@ -16,6 +16,11 @@ from nltk import word_tokenize
 import logging
 import warnings
 
+# Import graph material
+import matplotlib.pyplot as plt
+import numpy as np
+
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
 
@@ -26,10 +31,9 @@ stop_words.extend(['thy', 'thou', 'thee', 'till'])
 
 blake_poems = gutenberg.sents('blake-poems.txt')
 
-## Prepare text
-# Segment by poem (originally, the whole txt doc is divided by line)
-# TODO + remove the book of thel
 
+## Prepare text
+# Segment by poem (originally, the whole txt doc is divided by line)  # TODO + remove the book of thel
 
 def is_current_line_a_title(line):
     list_of_numbers = ['I', 'II', 'III']
@@ -49,33 +53,12 @@ def chunk_poems(docu):
 
     return list_of_poems
 
-# Segment by song collection
-
-
-def chunk_song_collection(text):
-    innocence = []
-    experience = []
-    list_of_song_collections = []
-    splitter = text.index(['SONGS', 'OF', 'EXPERIENCE'])
-    start = 2
-    end = text.index(['APPENDIX'])
-
-    innocence.append(text[start:splitter])
-    print(innocence)
-    experience.append(text[splitter:end])
-    print(experience)
-
-    list_of_song_collections.append(innocence)
-    list_of_song_collections.append(experience)
-
-    return innocence, experience
-    return list_of_song_collections
-
 
 all_poems = chunk_poems(blake_poems)
 
 # Tokenize and clean text, make it into data for Gensim
 # TODO lemmatize
+
 
 def clean_text(poem):
     tokenized_text = []
@@ -127,11 +110,19 @@ lda_model.save(fname="blake.lda")
 
 
 # Determine which topics belong to which documents
+# Up to 17: first songs
+
 # Keep 1 model, find out relative poems to documents, analyze and compare
 # Use method lda_model[corpus[n]
 
-def explore_song_collections(text):
-    innocence, experience = chunk_song_collection(text)
-    pass
+def get_song_collection(all_poems_index):
+    song = []
+    song_poems = all_poems_index
+    for poem in range(len(song_poems)):
+        song.extend(lda_model[corpus[poem]])
+    return song
 
-explore_song_collections(all_poems)
+
+innocence = get_song_collection(all_poems[:17])
+experience = get_song_collection(all_poems[17:])
+

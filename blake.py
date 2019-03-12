@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 
 # Gensim
 import gensim
@@ -110,10 +111,6 @@ lda_model.save(fname="blake.lda")
 
 
 # Determine which topics belong to which documents
-# Up to 17: first songs
-
-# Keep 1 model, find out relative poems to documents, analyze and compare
-# Use method lda_model[corpus[n]
 
 def get_song_collection(all_poems_index):
     song = []
@@ -126,3 +123,26 @@ def get_song_collection(all_poems_index):
 innocence = get_song_collection(all_poems[:17])
 experience = get_song_collection(all_poems[17:])
 
+# See which id corresponds to which word
+# print(innocence)
+# for x in innocence:
+#     x[0] = lda_model.id2word[x[0]]
+#     print(innocence)
+
+
+# For each topic, we will explore the words occuring in that topic and its relative weight
+# see: https://github.com/priya-dwivedi/Deep-Learning/blob/master/topic_modeling/LDA_Newsgroup.ipynb
+
+for idx, topic in lda_model.print_topics(-1):
+    print("Topic: {} \nWords: {}".format(idx, topic ))
+    print("\n")
+
+
+# To export the top words for each topic to a csv file:
+
+top_words_per_topic = []
+for t in range(lda_model.num_topics):
+    top_words_per_topic.extend([(t, ) + i for i in lda_model.show_topic(t, topn=20)])
+
+
+# For visualization, see: https://stackoverflow.com/questions/32945012/how-to-understand-this-heat-map-of-topic-shares-in-documents

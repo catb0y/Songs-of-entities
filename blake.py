@@ -146,3 +146,5 @@ for t in range(lda_model.num_topics):
 
 
 # For visualization, see: https://stackoverflow.com/questions/32945012/how-to-understand-this-heat-map-of-topic-shares-in-documents
+
+# Notes  topic strengths in poem = lda_model[dictionary.doc2bow(poem)]

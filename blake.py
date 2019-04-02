@@ -148,3 +148,4 @@ for t in range(lda_model.num_topics):
 # For visualization, see: https://stackoverflow.com/questions/32945012/how-to-understand-this-heat-map-of-topic-shares-in-documents
 
 # Notes  topic strengths in poem = lda_model[dictionary.doc2bow(poem)]  or lda_model[corpus[79]] per poem, divide poem collections
+# How to compare? Visualization, compute average of each book, which topic are the strongest for each poem, etc...

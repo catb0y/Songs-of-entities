@@ -35,7 +35,7 @@ blake_poems = gutenberg.sents('blake-poems.txt')
 
 ## Prepare text
 # Segment by poem (originally, the whole txt doc is divided by line)  # TODO + remove the book of thel
-
+strength_innocence_corpus
 def is_current_line_a_title(line):
     list_of_numbers = ['I', 'II', 'III']
     return all(word.isupper() for word in line if word not in list_of_numbers)
@@ -109,43 +109,18 @@ lda_model.save(fname="blake.lda")
 # vis = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
 # pyLDAvis.show(vis)
 
-
-# Determine which topics belong to which documents
-
-def get_song_collection(all_poems_index):
-    song = []
-    song_poems = all_poems_index
-    for poem in range(len(song_poems)):
-        song.extend(lda_model[corpus[poem]])
-    return song
-
-
-innocence = get_song_collection(all_poems[:17])
-experience = get_song_collection(all_poems[17:])
-
-# See which id corresponds to which word
-# print(innocence)
-# for x in innocence:
-#     x[0] = lda_model.id2word[x[0]]
-#     print(innocence)
-
-
-# For each topic, we will explore the words occuring in that topic and its relative weight
-# see: https://github.com/priya-dwivedi/Deep-Learning/blob/master/topic_modeling/LDA_Newsgroup.ipynb
-
+# Strength per book
 for idx, topic in lda_model.print_topics(-1):
-    print("Topic: {} \nWords: {}".format(idx, topic ))
+    print("Topic: {} \nWords: {}".format(idx, topic))
     print("\n")
 
-
-# To export the top words for each topic to a csv file:
-
-top_words_per_topic = []
-for t in range(lda_model.num_topics):
-    top_words_per_topic.extend([(t, ) + i for i in lda_model.show_topic(t, topn=20)])
+strength_innocence_corpus = [lda_model[dictionary.doc2bow(poem)] for poem in all_poems[:17]]
+strength_experience_corpus = [lda_model[dictionary.doc2bow(poem)] for poem in all_poems[17:]]
 
 
-# For visualization, see: https://stackoverflow.com/questions/32945012/how-to-understand-this-heat-map-of-topic-shares-in-documents
+innocence_model = pyLDAvis.gensim.prepare(lda_model, strength_innocence_corpus, dictionary)
+experience_model = pyLDAvis.gensim.prepare(lda_model, strength_experience_corpus, dictionary)
 
-# Notes  topic strengths in poem = lda_model[dictionary.doc2bow(poem)]  or lda_model[corpus[79]] per poem, divide poem collections
+
+# TODO:
 # How to compare? Visualization, compute average of each book, which topic are the strongest for each poem, etc...

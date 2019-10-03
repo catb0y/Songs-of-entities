@@ -35,7 +35,6 @@ blake_poems = gutenberg.sents('blake-poems.txt')
 
 ## Prepare text
 # Segment by poem (originally, the whole txt doc is divided by line)  # TODO + remove the book of thel
-strength_innocence_corpus
 def is_current_line_a_title(line):
     list_of_numbers = ['I', 'II', 'III']
     return all(word.isupper() for word in line if word not in list_of_numbers)
@@ -109,7 +108,7 @@ lda_model.save(fname="blake.lda")
 # vis = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary)
 # pyLDAvis.show(vis)
 
-# Strength per book
+# Strength per topic
 for idx, topic in lda_model.print_topics(-1):
     print("Topic: {} \nWords: {}".format(idx, topic))
     print("\n")
@@ -118,9 +117,10 @@ strength_innocence_corpus = [lda_model[dictionary.doc2bow(poem)] for poem in all
 strength_experience_corpus = [lda_model[dictionary.doc2bow(poem)] for poem in all_poems[17:]]
 
 
+# Topic strength per book
 innocence_model = pyLDAvis.gensim.prepare(lda_model, strength_innocence_corpus, dictionary)
 experience_model = pyLDAvis.gensim.prepare(lda_model, strength_experience_corpus, dictionary)
 
+# pyLDAvis.show(innocence_model)
+pyLDAvis.show(experience_model)
 
-# TODO:
-# How to compare? Visualization, compute average of each book, which topic are the strongest for each poem, etc...

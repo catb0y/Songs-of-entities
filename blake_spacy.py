@@ -85,7 +85,7 @@ for ent in doc_innocence.ents:
 matcher = Matcher(nlp.vocab)
 
 # Innocence matcher
-matcher.add("Animals", None, [{"LOWER": "lamb"}, {"LOWER": "tyger"}, {"LOWER": "dove"}])
+matcher.add("Animal", None, [{"LOWER": "lamb"}, {"LOWER": "tyger"}, {"LOWER": "dove"}])
 matches = matcher(doc_innocence)
 
 for match_id, start, end in matches:

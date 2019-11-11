@@ -12,6 +12,7 @@ import pyLDAvis.gensim
 from nltk.corpus import stopwords
 from nltk.corpus import gutenberg
 from nltk import word_tokenize
+#
 
 # Enable logging for gensim - optional
 import logging
@@ -28,7 +29,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 # NLTK stopwords
 stop_words = stopwords.words('english')
-stop_words.extend(['thy', 'thou', 'thee', 'till', 'every', 'shall', 'like'])
+stop_words.extend(['thy', 'thou', 'thee', 'till', 'every', 'shall', 'like', 'every'])
 
 blake_poems = gutenberg.sents('blake-poems.txt')
 
@@ -85,7 +86,6 @@ def tokenize_data(text):
 
 tokenized_data = tokenize_data(all_poems)
 
-
 # Build Dictionary (Construct word<->id mapping)
 dictionary = corpora.Dictionary(tokenized_data)  # Initialize a Dictionary
 
@@ -120,5 +120,5 @@ strength_experience_corpus = [lda_model[dictionary.doc2bow(poem)] for poem in al
 innocence_model = pyLDAvis.gensim.prepare(lda_model, strength_innocence_corpus, dictionary)
 experience_model = pyLDAvis.gensim.prepare(lda_model, strength_experience_corpus, dictionary)
 
-pyLDAvis.show(innocence_model)
-pyLDAvis.show(experience_model)
+# pyLDAvis.show(innocence_model)
+# pyLDAvis.show(experience_model)

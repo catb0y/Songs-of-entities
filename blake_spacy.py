@@ -10,6 +10,8 @@ from nltk import word_tokenize
 import spacy
 nlp = spacy.load("en_core_web_lg", disable=["tagger", "parser"])
 from spacy import displacy
+from spacy.matcher import Matcher
+from spacy.tokens import Span
 
 # NLTK stopwords
 stop_words = stopwords.words('english')
@@ -79,16 +81,6 @@ doc_experience = nlp(experience_text)
 
 for ent in doc_innocence.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
-
- # TODO Problem: not too many ents. Here is how to add a new one:
-
-#fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
-# doc.ents = list(doc.ents) + [fb_ent]
-
-# OR
-from spacy.matcher import Matcher
-from spacy.tokens import Span
 
 matcher = Matcher(nlp.vocab)
 

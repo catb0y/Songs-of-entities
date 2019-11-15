@@ -12,6 +12,11 @@ nlp = spacy.load("en_core_web_lg", disable=["tagger", "parser"])
 from spacy import displacy
 from spacy.matcher import Matcher
 from spacy.tokens import Span
+from spacy.pipeline import EntityRuler
+
+# Graph imports
+import matplotlib.pyplot as plt
+import networkx as nx
 
 # NLTK stopwords
 stop_words = stopwords.words('english')
@@ -43,10 +48,8 @@ def chunk_poems(docu):
 
 all_poems = chunk_poems(blake_poems)
 
-# Tokenize and clean text, make it into data for Gensim
-# TODO lemmatize
 
-
+# Tokenize and clean text
 def clean_text(poem):
     tokenized_text = []
     for word in poem:
@@ -76,23 +79,49 @@ tokenized_data = tokenize_data(all_poems)
 innocence_text = " ".join([val for sublist in all_poems[:17] for val in sublist if val.isalnum()])
 experience_text = " ".join([val for sublist in all_poems[17:] for val in sublist if val.isalnum()])
 
-doc_innocence = nlp(innocence_text)
-doc_experience = nlp(experience_text)
+matcher = Matcher(nlp.vocab)
 
+# TODO get rid of titles
+
+# Innocence matcher
+animals = ["lamb", "tyger", "dove"]
+ruler = EntityRuler(nlp)
+for a in animals:
+    ruler.add_patterns([{"label": "animal", "pattern": [{"LOWER": a}]}])
+nlp.add_pipe(ruler)
+
+doc_innocence = nlp(innocence_text)
 for ent in doc_innocence.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
-matcher = Matcher(nlp.vocab)
+with doc_innocence.retokenize() as retokenizer:
+    for ent in doc_innocence.ents:
+        retokenizer.merge(doc_innocence[ent.start:ent.end])
 
-# Innocence matcher
-matcher.add("Animal", None, [{"LOWER": "lamb"}, {"LOWER": "tyger"}, {"LOWER": "dove"}])
 matches = matcher(doc_innocence)
 
 for match_id, start, end in matches:
-    # create a new Span for each match and use the match_id (ANIMAL) as the label
-    span = Span(doc_innocence, start, end, label=match_id)
-    doc_innocence.ents = list(doc_innocence.ents) + [span]  # add span to doc.ents
+    span = doc_innocence[start:end]
 
-displacy.serve(doc_innocence, style="ent")
+# displacy.serve(doc_innocence, style="ent")
 
-# TODO GRaph library for py
+# TODO # Experience matcher
+
+# TODO Graph library for py
+# https://networkx.github.io/documentation/stable/auto_examples/index.html
+
+edges = []
+for token in doc_innocence:
+    for child in token.children:
+        edges.append(('{0}'.format(token.lower_),
+                      '{0}'.format(child.lower_)))
+
+# Todo finish edges
+# Author: Aric Hagberg (hagberg@lanl.gov)
+
+G = nx.star_graph(edges)  # todo here goes the data
+pos = nx.spring_layout(G)
+colors = range(20)
+nx.draw(G, pos, node_color='#A0CBE2', edge_color=colors,
+        width=4, edge_cmap=plt.cm.Blues, with_labels=False)
+plt.show()

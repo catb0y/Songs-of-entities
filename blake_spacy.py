@@ -1,3 +1,4 @@
+import itertools
 import re
 import pandas as pd
 
@@ -74,16 +75,16 @@ def tokenize_data(text):
 
 
 tokenized_data = tokenize_data(all_poems)
+poems_of_innocence = tokenized_data[:17]
+poems_of_experience = tokenized_data[17:]
 
 # Spacy entity recognition
-innocence_text = " ".join([val for sublist in all_poems[:17] for val in sublist if val.isalnum()])
-experience_text = " ".join([val for sublist in all_poems[17:] for val in sublist if val.isalnum()])
+innocence_text = " ".join([val for sublist in tokenized_data[:17] for val in sublist if val.isalnum()])
+experience_text = " ".join([val for sublist in tokenized_data[17:] for val in sublist if val.isalnum()])
 
 matcher = Matcher(nlp.vocab)
 
-# TODO get rid of titles
-
-# Innocence matcher
+# Innocence matcher # TODO add more and group by symbolism
 animals = ["lamb", "tyger", "dove"]
 ruler = EntityRuler(nlp)
 for a in animals:
@@ -107,21 +108,32 @@ for match_id, start, end in matches:
 
 # TODO # Experience matcher
 
-# TODO Graph library for py
+# The Network (Just Innocence for now)
 # https://networkx.github.io/documentation/stable/auto_examples/index.html
-
-edges = []
-for token in doc_innocence:
-    for child in token.children:
-        edges.append(('{0}'.format(token.lower_),
-                      '{0}'.format(child.lower_)))
-
-# Todo finish edges
 # Author: Aric Hagberg (hagberg@lanl.gov)
 
-G = nx.star_graph(edges)  # todo here goes the data
+# TODO:
+# Nodes: entities, symbols
+# Edges: how often entities appear together in poems
+
+G = nx.Graph(20)
+G.add_nodes_from([ent for ent in doc_innocence.ents])
+
+innocence_entities = [ent.text for ent in doc_innocence.ents]
+co_occurences = []
+for poem in poems_of_innocence:
+    # Find common names & extract only the unique names
+    co_occurences.append(list(set(set(innocence_entities) & (set(poem)))))
+
+# Get all co-occurrences and their frequency and pass it as edges
+combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
+flattened_combinations = [x[0] for x in combinations if x]
+occurrence_dict = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
+for tup in flattened_combinations:
+    G.add_edge(tup, flattened_combinations.count(tup))  # temporary, obviously
+
 pos = nx.spring_layout(G)
-colors = range(20)
-nx.draw(G, pos, node_color='#A0CBE2', edge_color=colors,
+colors = range(2) # edge_colors todo
+nx.draw(G, pos, node_color='#A0CBE2',
         width=4, edge_cmap=plt.cm.Blues, with_labels=False)
 plt.show()

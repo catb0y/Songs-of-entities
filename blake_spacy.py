@@ -110,6 +110,7 @@ doc_innocence = nlp(innocence_text)
 for ent in doc_innocence.ents:
     print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
+
 with doc_innocence.retokenize() as retokenizer:
     for ent in doc_innocence.ents:
         retokenizer.merge(doc_innocence[ent.start:ent.end])
@@ -123,7 +124,7 @@ for match_id, start, end in matches:
 # TODO # Experience matcher
 
 # The Network (Just Innocence for now) ->
-# TODO: need a weighted, bidirectional graph
+# TODO: need a weighted, bidirectional graph. Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py
 # https://networkx.github.io/documentation/stable/auto_examples/index.html
 # Author: Aric Hagberg (hagberg@lanl.gov)
 

@@ -6,9 +6,12 @@ import pandas as pd
 from nltk.corpus import stopwords
 from nltk.corpus import gutenberg
 from nltk import word_tokenize
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 
 # Spacy imports
 import spacy
+
 nlp = spacy.load("en_core_web_lg", disable=["tagger", "parser"])
 from spacy import displacy
 from spacy.matcher import Matcher
@@ -50,11 +53,13 @@ def chunk_poems(docu):
 all_poems = chunk_poems(blake_poems)
 
 
-# Tokenize and clean text
+# Tokenize, lemmatize, and clean text
 def clean_text(poem):
     tokenized_text = []
     for word in poem:
-        tokenized_text.extend(word_tokenize(word.lower()))
+        if word not in tokenized_text:
+            word = lemmatizer.lemmatize(word)
+            tokenized_text.extend(word_tokenize(word.lower()))
 
     return [
         elem for elem in tokenized_text
@@ -85,10 +90,20 @@ experience_text = " ".join([val for sublist in tokenized_data[17:] for val in su
 matcher = Matcher(nlp.vocab)
 
 # Innocence matcher # TODO add more and group by symbolism
-animals = ["lamb", "tyger", "dove"]
+ENTITY_MAPPING = {
+    "animals": ["lamb", "tiger", "sheep", "dove", "grasshopper"],
+    "bucolic_symbolism": ["shepherd"],
+    "religious_figures": ["angel", ],
+    "emotions": ["joy", "merry", "cheer", "happy", "wept", "smile"],
+    "colors": ["green"],
+    "times_of_the_day": ["morning", "night", "day"]
+}
+
 ruler = EntityRuler(nlp)
-for a in animals:
-    ruler.add_patterns([{"label": "animal", "pattern": [{"LOWER": a}]}])
+
+for label_name, entity_list in ENTITY_MAPPING.items():
+    for entity in entity_list:
+        ruler.add_patterns([{"label": label_name, "pattern": [{"LOWER": entity}]}])
 nlp.add_pipe(ruler)
 
 doc_innocence = nlp(innocence_text)
@@ -105,18 +120,17 @@ for match_id, start, end in matches:
     span = doc_innocence[start:end]
 
 # displacy.serve(doc_innocence, style="ent")
-
 # TODO # Experience matcher
 
-# The Network (Just Innocence for now)
+# The Network (Just Innocence for now) ->
+# TODO: need a weighted, bidirectional graph
 # https://networkx.github.io/documentation/stable/auto_examples/index.html
 # Author: Aric Hagberg (hagberg@lanl.gov)
 
-# TODO:
 # Nodes: entities, symbols
 # Edges: how often entities appear together in poems
 
-G = nx.Graph(20)
+G = nx.star_graph(20)
 G.add_nodes_from([ent for ent in doc_innocence.ents])
 
 innocence_entities = [ent.text for ent in doc_innocence.ents]
@@ -130,7 +144,7 @@ combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurence
 flattened_combinations = [x[0] for x in combinations if x]
 occurrence_dict = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
 for tup in flattened_combinations:
-    G.add_edge(tup, flattened_combinations.count(tup))  # temporary, obviously
+    G.add_edge(tup, flattened_combinations.count(tup))
 
 pos = nx.spring_layout(G)
 colors = range(2) # edge_colors todo

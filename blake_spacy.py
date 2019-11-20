@@ -154,8 +154,8 @@ def graph_building(doc):
 
     # Get all co-occurrences and their frequency and pass it as edges
     combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
-    flattened_combinations = [x[0] for x in combinations if x]
-    occurrence_dict = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
+    # TODO actually flatten the combinations
+    flattened_combinations = [t for sublist in combinations for i in sublist for t in i]
     for tup in flattened_combinations:
         G.add_edge(tup[0], tup[1], weight=flattened_combinations.count(tup))
 

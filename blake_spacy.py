@@ -17,6 +17,7 @@ from spacy import displacy
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.pipeline import EntityRuler
+import matplotlib.pyplot as plt
 
 # Graph imports
 import matplotlib.pyplot as plt
@@ -89,7 +90,7 @@ experience_text = " ".join([val for sublist in tokenized_data[17:] for val in su
 
 matcher = Matcher(nlp.vocab)
 
-# Innocence matcher # TODO add more and group by symbolism
+# Entity Matcher # TODO add more and group by symbolism
 ENTITY_MAPPING = {
     "animals": ["lamb", "tiger", "sheep", "dove", "grasshopper"],
     "bucolic_symbolism": ["shepherd"],
@@ -106,49 +107,73 @@ for label_name, entity_list in ENTITY_MAPPING.items():
         ruler.add_patterns([{"label": label_name, "pattern": [{"LOWER": entity}]}])
 nlp.add_pipe(ruler)
 
-doc_innocence = nlp(innocence_text)
-for ent in doc_innocence.ents:
-    print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
+def matching(text):
+    doc = nlp(text)
+    # doc_experience = nlp(innocence_text)
 
-with doc_innocence.retokenize() as retokenizer:
-    for ent in doc_innocence.ents:
-        retokenizer.merge(doc_innocence[ent.start:ent.end])
+    for ent in doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
-matches = matcher(doc_innocence)
+    with doc.retokenize() as retokenizer:
+        for ent in doc.ents:
+            retokenizer.merge(doc[ent.start:ent.end])
 
-for match_id, start, end in matches:
-    span = doc_innocence[start:end]
+    return doc
+
+doc_innocence = matching(innocence_text)
+doc_experience = matching(experience_text)
+
+# matches = matcher(doc_innocence)
+# 
+# for match_id, start, end in matches:
+#     span = doc_innocence[start:end]
 
 # displacy.serve(doc_innocence, style="ent")
-# TODO # Experience matcher
+# displacy.serve(doc_experience, style="ent")
 
-# The Network (Just Innocence for now) ->
-# TODO: need a weighted, bidirectional graph. Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py
+# The Network
+# TODO: need a weighted, bidirectional graph.
+#  Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py
 # https://networkx.github.io/documentation/stable/auto_examples/index.html
 # Author: Aric Hagberg (hagberg@lanl.gov)
 
 # Nodes: entities, symbols
 # Edges: how often entities appear together in poems
 
-G = nx.star_graph(20)
-G.add_nodes_from([ent for ent in doc_innocence.ents])
 
-innocence_entities = [ent.text for ent in doc_innocence.ents]
-co_occurences = []
-for poem in poems_of_innocence:
-    # Find common names & extract only the unique names
-    co_occurences.append(list(set(set(innocence_entities) & (set(poem)))))
+def graph_building(doc):
+    G = nx.Graph()
+    G.add_nodes_from([ent for ent in doc.ents])
 
-# Get all co-occurrences and their frequency and pass it as edges
-combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
-flattened_combinations = [x[0] for x in combinations if x]
-occurrence_dict = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
-for tup in flattened_combinations:
-    G.add_edge(tup, flattened_combinations.count(tup))
+    innocence_entities = [ent.text for ent in doc.ents]
+    co_occurences = []
+    for poem in poems_of_innocence:
+        # Find common names & extract only the unique names
+        co_occurences.append(list(set(set(innocence_entities) & (set(poem)))))
 
-pos = nx.spring_layout(G)
-colors = range(2) # edge_colors todo
-nx.draw(G, pos, node_color='#A0CBE2',
-        width=4, edge_cmap=plt.cm.Blues, with_labels=False)
-plt.show()
+    # Get all co-occurrences and their frequency and pass it as edges
+    combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
+    flattened_combinations = [x[0] for x in combinations if x]
+    occurrence_dict = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
+    for tup in flattened_combinations:
+        G.add_edge(tup[0], tup[1], weight=flattened_combinations.count(tup))
+
+    pos = nx.spring_layout(G)
+    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 0.5]
+    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] <= 0.5]
+
+    nx.draw_networkx_nodes(G, pos, node_size=300)
+    nx.draw_networkx_edges(G, pos, edgelist=elarge,
+                           width=6)
+    nx.draw_networkx_edges(G, pos, edgelist=esmall,
+                           width=6, alpha=0.5, edge_color='b', style='dashed')
+    # labels
+    nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+
+    plt.axis('off')
+    plt.show()
+
+
+graph_building(doc_innocence)
+graph_building(doc_experience)

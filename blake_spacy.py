@@ -18,6 +18,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.pipeline import EntityRuler
 import matplotlib.pyplot as plt
+from .constants import ENTITY_MAPPING
 
 # Graph imports
 import matplotlib.pyplot as plt
@@ -85,20 +86,12 @@ poems_of_innocence = tokenized_data[:17]
 poems_of_experience = tokenized_data[17:]
 
 # Spacy entity recognition
-innocence_text = " ".join([val for sublist in tokenized_data[:17] for val in sublist if val.isalnum()])
+innocence_text = " ".join([val for sublist in tokenized_data[11:17] for val in sublist if val.isalnum()])
 experience_text = " ".join([val for sublist in tokenized_data[17:] for val in sublist if val.isalnum()])
 
 matcher = Matcher(nlp.vocab)
 
 # Entity Matcher # TODO add more and group by symbolism
-ENTITY_MAPPING = {
-    "animals": ["lamb", "tiger", "sheep", "dove", "grasshopper"],
-    "bucolic_symbolism": ["shepherd"],
-    "religious_figures": ["angel", ],
-    "emotions": ["joy", "merry", "cheer", "happy", "wept", "smile"],
-    "colors": ["green"],
-    "times_of_the_day": ["morning", "night", "day"]
-}
 
 ruler = EntityRuler(nlp)
 
@@ -123,13 +116,8 @@ def matching(text):
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
 
-# matches = matcher(doc_innocence)
-# 
-# for match_id, start, end in matches:
-#     span = doc_innocence[start:end]
-
 # displacy.serve(doc_innocence, style="ent")
-# displacy.serve(doc_experience, style="ent")
+displacy.serve(doc_experience, style="ent")
 
 # The Network - a weighted, bidirectional graph.
 #  Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py

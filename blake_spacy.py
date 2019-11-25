@@ -110,7 +110,6 @@ nlp.add_pipe(ruler)
 
 def matching(text):
     doc = nlp(text)
-    # doc_experience = nlp(innocence_text)
 
     for ent in doc.ents:
         print(ent.text, ent.start_char, ent.end_char, ent.label_)
@@ -132,8 +131,7 @@ doc_experience = matching(experience_text)
 # displacy.serve(doc_innocence, style="ent")
 # displacy.serve(doc_experience, style="ent")
 
-# The Network
-# TODO: need a weighted, bidirectional graph.
+# The Network - a weighted, bidirectional graph.
 #  Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py
 # https://networkx.github.io/documentation/stable/auto_examples/index.html
 # Author: Aric Hagberg (hagberg@lanl.gov)
@@ -152,24 +150,24 @@ def graph_building(doc):
         # Find common names & extract only the unique names
         co_occurences.append(list(set(set(innocence_entities) & (set(poem)))))
 
-    # Get all co-occurrences and their frequency and pass it as edges
+    # Get all co-occurrences and their frequency and pass as edges
     combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
-    # TODO actually flatten the combinations
-    flattened_combinations = [t for sublist in combinations for i in sublist for t in i]
-    for tup in flattened_combinations:
-        G.add_edge(tup[0], tup[1], weight=flattened_combinations.count(tup))
+    flattened_combinations = [tup for sublist in combinations for tup in sublist]
+    dict_combinations = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
+    for tup, frequency in dict_combinations.items():
+        G.add_edge(tup[0], tup[1], weight=frequency/10)  # n/10 to make the graph less dense and more readable
 
     pos = nx.spring_layout(G)
-    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 0.5]
-    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] <= 0.5]
+    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 0.1]
+    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] <= 0.1]
 
-    nx.draw_networkx_nodes(G, pos, node_size=300)
+    nx.draw_networkx_nodes(G, pos, node_size=200)
     nx.draw_networkx_edges(G, pos, edgelist=elarge,
-                           width=6)
+                           width=2)
     nx.draw_networkx_edges(G, pos, edgelist=esmall,
-                           width=6, alpha=0.5, edge_color='b', style='dashed')
+                           width=2, alpha=0.5, edge_color='b', style='dashed')
     # labels
-    nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+    nx.draw_networkx_labels(G, pos, font_size=15, font_family='sans-serif')
 
     plt.axis('off')
     plt.show()

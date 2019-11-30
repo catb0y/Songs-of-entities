@@ -1,6 +1,5 @@
 import itertools
 import re
-import pandas as pd
 
 # NLTK imports
 from nltk.corpus import stopwords
@@ -18,7 +17,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.pipeline import EntityRuler
 import matplotlib.pyplot as plt
-from .constants import ENTITY_MAPPING
+from constants import ENTITY_MAPPING
 
 # Graph imports
 import matplotlib.pyplot as plt
@@ -55,6 +54,7 @@ def chunk_poems(docu):
 all_poems = chunk_poems(blake_poems)
 
 
+# TODO lemmatization fails sometimes
 # Tokenize, lemmatize, and clean text
 def clean_text(poem):
     tokenized_text = []
@@ -82,12 +82,12 @@ def tokenize_data(text):
 
 
 tokenized_data = tokenize_data(all_poems)
-poems_of_innocence = tokenized_data[:17]
-poems_of_experience = tokenized_data[17:]
+poems_of_innocence = tokenized_data[1:17]
+poems_of_experience = tokenized_data[17:-3]  # TODO double check
 
 # Spacy entity recognition
-innocence_text = " ".join([val for sublist in tokenized_data[11:17] for val in sublist if val.isalnum()])
-experience_text = " ".join([val for sublist in tokenized_data[17:] for val in sublist if val.isalnum()])
+innocence_text = " ".join([val for sublist in poems_of_innocence for val in sublist if val.isalnum()])
+experience_text = " ".join([val for sublist in poems_of_experience for val in sublist if val.isalnum()])
 
 matcher = Matcher(nlp.vocab)
 
@@ -104,14 +104,13 @@ nlp.add_pipe(ruler)
 def matching(text):
     doc = nlp(text)
 
-    for ent in doc.ents:
-        print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             retokenizer.merge(doc[ent.start:ent.end])
 
     return doc
+
+# TODO fix the wrong entity names
 
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
@@ -143,17 +142,18 @@ def graph_building(doc):
     flattened_combinations = [tup for sublist in combinations for tup in sublist]
     dict_combinations = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
     for tup, frequency in dict_combinations.items():
-        G.add_edge(tup[0], tup[1], weight=frequency/10)  # n/10 to make the graph less dense and more readable
+        if frequency >= 3:  # the groups of entities from frequently together
+            G.add_edge(tup[0], tup[1], weight=frequency)
 
     pos = nx.spring_layout(G)
-    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 0.1]
-    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] <= 0.1]
+    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] >= 3]
+    esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] < 3]
 
-    nx.draw_networkx_nodes(G, pos, node_size=200)
-    nx.draw_networkx_edges(G, pos, edgelist=elarge,
+    nx.draw_networkx_nodes(G, pos, node_color="#aab3e3", node_size=200)
+    nx.draw_networkx_edges(G, pos, edgelist=elarge, edge_color="#A0CBE2",
                            width=2)
     nx.draw_networkx_edges(G, pos, edgelist=esmall,
-                           width=2, alpha=0.5, edge_color='b', style='dashed')
+                           width=2, alpha=0.5, edge_color='#6776c7', style='dashed')
     # labels
     nx.draw_networkx_labels(G, pos, font_size=15, font_family='sans-serif')
 

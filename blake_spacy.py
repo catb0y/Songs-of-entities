@@ -10,7 +10,6 @@ lemmatizer = WordNetLemmatizer()
 
 # Spacy imports
 import spacy
-
 nlp = spacy.load("en_core_web_lg", disable=["tagger", "parser"])
 from spacy import displacy
 from spacy.matcher import Matcher
@@ -54,14 +53,13 @@ def chunk_poems(docu):
 all_poems = chunk_poems(blake_poems)
 
 
-# TODO lemmatization fails sometimes
 # Tokenize, lemmatize, and clean text
 def clean_text(poem):
     tokenized_text = []
+    poem = nlp(" ".join([word.lower() for word in poem]))
     for word in poem:
-        if word not in tokenized_text:
-            word = lemmatizer.lemmatize(word)
-            tokenized_text.extend(word_tokenize(word.lower()))
+        if word.text not in tokenized_text and word.text.isalnum():
+            tokenized_text.append(word.lemma_)
 
     return [
         elem for elem in tokenized_text

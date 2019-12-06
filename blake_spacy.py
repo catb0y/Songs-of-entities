@@ -1,4 +1,5 @@
 import itertools
+import random
 import re
 
 # NLTK imports
@@ -6,10 +7,12 @@ from nltk.corpus import stopwords
 from nltk.corpus import gutenberg
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
+
 lemmatizer = WordNetLemmatizer()
 
 # Spacy imports
 import spacy
+
 nlp = spacy.load("en_core_web_lg", disable=["tagger", "parser"])
 from spacy import displacy
 from spacy.matcher import Matcher
@@ -56,7 +59,6 @@ all_poems = chunk_poems(blake_poems)
 # Tokenize, lemmatize, and clean text
 def clean_text(poem):
     tokenized_text = []
-    poem = nlp(" ".join([word.lower() for word in poem]))
     for word in poem:
         if word.text not in tokenized_text and word.text.isalnum():
             tokenized_text.append(word.lemma_)
@@ -64,10 +66,10 @@ def clean_text(poem):
     return [
         elem for elem in tokenized_text
         if elem not in stop_words and
-        re.match(
-            '[a-zA-Z\-][a-zA-Z\-]{2,}',
-            elem
-        )
+           re.match(
+               '[a-zA-Z\-][a-zA-Z\-]{2,}',
+               elem
+           )
     ]
 
 
@@ -75,12 +77,13 @@ def clean_text(poem):
 def tokenize_data(text):
     tokenized_data = []
     for poem in text:
-        tokenized_data.append(clean_text(poem))
+        tokenized_data.append(clean_text(nlp(" ".join([word.lower() for word in poem]))
+                                         ))
     return tokenized_data
 
 
 tokenized_data = tokenize_data(all_poems)
-poems_of_innocence = tokenized_data[1:17]
+poems_of_innocence = tokenized_data[3:17]
 poems_of_experience = tokenized_data[17:-3]  # TODO double check
 
 # Spacy entity recognition
@@ -89,7 +92,20 @@ experience_text = " ".join([val for sublist in poems_of_experience for val in su
 
 matcher = Matcher(nlp.vocab)
 
-# Entity Matcher # TODO add more and group by symbolism
+# Entity Matcher
+
+# Train inaccurate data  # Todo does it make sense?
+TRAIN_DATA = [
+        ("A robin flew from the tree", {"entities": [(2, 7, "ANIMALS")]}),
+        ("A merry sparrow flew from the tree", {"entities": [(2, 13, "ANIMALS")]})]
+
+nlp = spacy.blank("en")
+optimizer = nlp.begin_training()
+for i in range(20):
+    random.shuffle(TRAIN_DATA)
+    for text, annotations in TRAIN_DATA:
+        nlp.update([text], [annotations], sgd=optimizer)
+nlp.to_disk("./model")
 
 ruler = EntityRuler(nlp)
 
@@ -108,17 +124,18 @@ def matching(text):
 
     return doc
 
+
 # TODO fix the wrong entity names
 
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
 
 # displacy.serve(doc_innocence, style="ent")
-displacy.serve(doc_experience, style="ent")
+# displacy.serve(doc_experience, style="ent")
 
-# The Network - a weighted, bidirectional graph.
-#  Please use https://networkx.github.io/documentation/stable/auto_examples/drawing/plot_weighted_graph.html#sphx-glr-auto-examples-drawing-plot-weighted-graph-py
-# https://networkx.github.io/documentation/stable/auto_examples/index.html
+
+# The Network - a weighted, bidirectional graph
+# from: https://networkx.github.io/documentation/stable/auto_examples/index.html
 # Author: Aric Hagberg (hagberg@lanl.gov)
 
 # Nodes: entities, symbols

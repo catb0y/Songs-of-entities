@@ -17,5 +17,5 @@ ENTITY_MAPPING = {
     "TIMES_OF_THE_DAY": ["morning", "night", "day", "noonday"],
     "NATURE": ["hill", "meadow", "flower", "tree", "snow", "oak",
                "cheery", "nest", "grass", "pebble", "root", "garden",
-               "valley", "desert", "lily", "rose", "thorn"]
+               "valley", "desert", "lily", "rose", "thorn", "merry sparrow"]
 }

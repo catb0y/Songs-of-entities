@@ -19,7 +19,8 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.pipeline import EntityRuler
 import matplotlib.pyplot as plt
-from constants import ENTITY_MAPPING
+from constants import ENTITY_MAPPING, TRAIN_DTA##
+from constants import TRAIN_DATA
 
 # Graph imports
 import matplotlib.pyplot as plt
@@ -92,13 +93,7 @@ experience_text = " ".join([val for sublist in poems_of_experience for val in su
 
 matcher = Matcher(nlp.vocab)
 
-# Entity Matcher
-
-# Train inaccurate data  # Todo does it make sense?
-TRAIN_DATA = [
-        ("A robin flew from the tree", {"entities": [(2, 7, "ANIMALS")]}),
-        ("A merry sparrow flew from the tree", {"entities": [(2, 13, "ANIMALS")]})]
-
+# Train inaccurate data
 nlp = spacy.blank("en")
 optimizer = nlp.begin_training()
 for i in range(20):
@@ -107,6 +102,8 @@ for i in range(20):
         nlp.update([text], [annotations], sgd=optimizer)
 nlp.to_disk("./model")
 
+# TODO add entity mapping stuff for Songs of Experience
+# Entity Matcher
 ruler = EntityRuler(nlp)
 
 for label_name, entity_list in ENTITY_MAPPING.items():
@@ -125,8 +122,6 @@ def matching(text):
     return doc
 
 
-# TODO fix the wrong entity names
-
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
 
@@ -142,22 +137,22 @@ doc_experience = matching(experience_text)
 # Edges: how often entities appear together in poems
 
 
-def graph_building(doc):
+def graph_building(doc, poems):
     G = nx.Graph()
     G.add_nodes_from([ent for ent in doc.ents])
 
-    innocence_entities = [ent.text for ent in doc.ents]
+    entities = [ent.text for ent in doc.ents]
     co_occurences = []
-    for poem in poems_of_innocence:
+    for poem in poems:
         # Find common names & extract only the unique names
-        co_occurences.append(list(set(set(innocence_entities) & (set(poem)))))
+        co_occurences.append(list(set(set(entities) & (set(poem)))))
 
     # Get all co-occurrences and their frequency and pass as edges
     combinations = [list(itertools.combinations(combo, 2)) for combo in co_occurences]
     flattened_combinations = [tup for sublist in combinations for tup in sublist]
     dict_combinations = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
     for tup, frequency in dict_combinations.items():
-        if frequency >= 3:  # the groups of entities from frequently together
+        if frequency >= 3:  # the groups of entities frequently together
             G.add_edge(tup[0], tup[1], weight=frequency)
 
     pos = nx.spring_layout(G)
@@ -176,5 +171,6 @@ def graph_building(doc):
     plt.show()
 
 
-graph_building(doc_innocence)
-graph_building(doc_experience)
+# graph_building(doc_innocence, poems_of_innocence)
+graph_building(doc_experience, poems_of_experience)
+

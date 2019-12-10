@@ -19,7 +19,7 @@ from spacy.matcher import Matcher
 from spacy.tokens import Span
 from spacy.pipeline import EntityRuler
 import matplotlib.pyplot as plt
-from constants import ENTITY_MAPPING, TRAIN_DTA##
+from constants import ENTITY_MAPPING
 from constants import TRAIN_DATA
 
 # Graph imports
@@ -124,7 +124,7 @@ def matching(text):
 
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
-
+#
 # displacy.serve(doc_innocence, style="ent")
 # displacy.serve(doc_experience, style="ent")
 
@@ -152,11 +152,11 @@ def graph_building(doc, poems):
     flattened_combinations = [tup for sublist in combinations for tup in sublist]
     dict_combinations = {tup: flattened_combinations.count(tup) for tup in flattened_combinations}
     for tup, frequency in dict_combinations.items():
-        if frequency >= 3:  # the groups of entities frequently together
+        if frequency > 3:  # the groups of entities frequently together
             G.add_edge(tup[0], tup[1], weight=frequency)
 
     pos = nx.spring_layout(G)
-    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] >= 3]
+    elarge = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] > 3]
     esmall = [(u, v) for (u, v, d) in G.edges(data=True) if d['weight'] < 3]
 
     nx.draw_networkx_nodes(G, pos, node_color="#aab3e3", node_size=200)
@@ -171,6 +171,6 @@ def graph_building(doc, poems):
     plt.show()
 
 
-# graph_building(doc_innocence, poems_of_innocence)
+graph_building(doc_innocence, poems_of_innocence)
 graph_building(doc_experience, poems_of_experience)
 

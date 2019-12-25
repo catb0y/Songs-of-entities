@@ -36,7 +36,6 @@ ENTITY_MAPPING = {
         'bone',
         'maiden',
         'man',
-        'nurse',
         'vagabond',
         'crown'
     ],
@@ -113,7 +112,9 @@ ENTITY_MAPPING = {
         'jealous',
         'little',
         'dream',
-        'wild'
+        'wild',
+        'weary',
+        'groan'
     ],
     'COLORS': ['green', 'white', 'crimson', 'black'],
     'DAY_AND_TIME_CYCLES': [

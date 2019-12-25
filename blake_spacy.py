@@ -34,7 +34,7 @@ blake_poems = gutenberg.sents('blake-poems.txt')
 
 
 # Prepare text
-# Segment by poem (originally, the whole txt doc is divided by line)  # TODO + remove the book of thel
+# Segment by poem (originally, the whole txt doc is divided by line)
 def is_current_line_a_title(line):
     list_of_numbers = ['I', 'II', 'III']
     return all(word.isupper() for word in line if word not in list_of_numbers)
@@ -102,7 +102,6 @@ for i in range(20):
         nlp.update([text], [annotations], sgd=optimizer)
 nlp.to_disk("./model")
 
-# TODO add entity mapping stuff for Songs of Experience
 # Entity Matcher
 ruler = EntityRuler(nlp)
 
@@ -124,7 +123,8 @@ def matching(text):
 
 doc_innocence = matching(innocence_text)
 doc_experience = matching(experience_text)
-#
+
+# To visualize the entity tagging, uncomment
 # displacy.serve(doc_innocence, style="ent")
 # displacy.serve(doc_experience, style="ent")
 

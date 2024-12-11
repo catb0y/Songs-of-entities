@@ -85,7 +85,7 @@ def tokenize_data(text):
 
 tokenized_data = tokenize_data(all_poems)
 poems_of_innocence = tokenized_data[3:17]
-poems_of_experience = tokenized_data[17:-3]  # TODO double check
+poems_of_experience = tokenized_data[17:-3]
 
 # Spacy entity recognition
 innocence_text = " ".join([val for sublist in poems_of_innocence for val in sublist if val.isalnum()])
